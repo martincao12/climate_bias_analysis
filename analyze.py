@@ -173,7 +173,7 @@ def obtainBiasFamilies(bis):
         count+=1
         bicount=0
         bfHeatMap=np.zeros((90,180),dtype=np.int)
-        bfTtitle="Periods: "
+        bfTitle="Periods: "
         for idx in sorted(component):
             bicount+=1
             bi=bis[idx]
@@ -182,14 +182,11 @@ def obtainBiasFamilies(bis):
                 idxLat,idxLon=string2Grid(gridS)
                 heatMap[idxLat,idxLon]=1
                 bfHeatMap[idxLat,idxLon]=1
-            # bfTtitle+="%4d-%4d  "%(1980+bi.tStart,1980+bi.tEnd)
-            bfTtitle+="%04d%02d-%04d%02d  "%(1980+bi.tStart/12,bi.tStart%12+1,1980+bi.tEnd/12,bi.tEnd%12+1)
+            # bfTitle+="%4d-%4d  "%(1980+bi.tStart,1980+bi.tEnd)
+            bfTitle+="%04d%02d-%04d%02d  "%(1980+bi.tStart/12,bi.tStart%12+1,1980+bi.tEnd/12,bi.tEnd%12+1)
             # PlotHeatMap.plotGlobal(heatMap,"figure/bf%03d_%03d_%04d-%04d.png"%(count,bicount,1980+bi.tStart,1980+bi.tEnd),needBalance=True)
             # PlotHeatMap.plotGlobal(heatMap,"figure/bf%03d_%03d_%04d_%02d-%04d_%02d.png"%(count,bicount,1980+bi.tStart/12,bi.tStart%12+1,1980+bi.tEnd/12,bi.tEnd%12+1),needBalance=True)
-        bfTtitleW=""
-        for i in range(0,len(bfTtitle),100):
-            bfTtitleW+=(bfTtitle[i:i+100]+"\n")
-        PlotHeatMap.plotGlobal(bfHeatMap,"figure/bf%03d.png"%(count),needBalance=True,title=bfTtitleW)
+        PlotHeatMap.plotGlobal(bfHeatMap,"figure/bf%03d.png"%(count),needBalance=True,title=bfTitle)
 
 if __name__ == '__main__':
 

@@ -43,6 +43,11 @@ def plotGlobal(data,figname,title="",needBalance=False,latStartAtZero=False):
 
     cs=m.contourf(x,y,data,20,cmap = cm.seismic)
     cbar = m.colorbar(cs,location='bottom',pad="5%")
-    plt.title(title,fontsize="medium")
+
+    titleW=""
+    for i in range(0,len(title),140):
+        titleW+=(title[i:i+140]+"\n")
+
+    plt.title(titleW,fontsize="medium")
     plt.savefig(figname)
     plt.close()
