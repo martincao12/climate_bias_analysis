@@ -10,8 +10,11 @@ import math
 import matplotlib.pyplot as plt 
 import os
 
+
+fileToAnalysis="data/diff_tos_ersst_ccsm4.txt"
 fileToAnalysis="data/diff_pr_gpcp_ccsm4.txt"
-# fileToAnalysis="data/diff_tos_ersst_ccsm4.txt"
+fileToAnalysis="data/diff_tauu_tauuob_ccsm4.txt"
+fileToAnalysis="data/diff_psl_pslob_ccsm4.txt"
 
 deltaA=25
 deltaR=0.5
@@ -222,7 +225,6 @@ def obtainBiasFamilies(bis):
 
     delFile("figure/bis")
     delFile("figure/bfs")
-    delFile("figure/relations")
 
 
     count=0
@@ -239,7 +241,7 @@ def obtainBiasFamilies(bis):
             for gridS in bi.region:
                 idxLat,idxLon=string2Grid(gridS)
                 heatMap[idxLat,idxLon]=1
-                bfHeatMap[idxLat,idxLon]=1
+                bfHeatMap[idxLat,idxLon]+=1
             # bfTitle+="%4d-%4d  "%(1980+bi.tStart,1980+bi.tEnd)
             bfTitle+="%04d%02d-%04d%02d  "%(1980+bi.tStart/12,bi.tStart%12+1,1980+bi.tEnd/12,bi.tEnd%12+1)
             for t in range(bi.tStart,bi.tEnd+1):
@@ -269,6 +271,9 @@ def depictRelations(bfs):
     edges=[(edge[0],edge[1]) for edge in sorted(G.edges(data=True),key=lambda edge:edge[2]["similarity"])]
     retain=1
     G.remove_edges_from(edges[:int(len(edges)*(1-retain))])
+
+    
+    delFile("figure/relations")
 
     components=nx.connected_components(G)
     count=0
@@ -303,6 +308,8 @@ if __name__ == '__main__':
     createDir()
     start=time.time() 
     r=loadData(fileToAnalysis)
+
+
 
     # for t in range(0,r.shape[2],12):
     #     r[:,:,int(t/12)]=np.mean(r[:,:,t:t+12],axis=2)
