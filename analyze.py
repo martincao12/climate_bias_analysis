@@ -234,7 +234,7 @@ def obtainBiasFamilies(bis):
         bfTitle="Periods: "
         bicount=0
         hist=[["Jan",0,0],["Feb",0,0],["Mar",0,0],["Apr",0,0],["May",0,0],["Jun",0,0],["Jul",0,0],["Aug",0,0],["Sep",0,0],["Oct",0,0],["Nov",0,0],["Dec",0,0]]
-        trend=[["%04d%02d"%(1980+t/12,t%12+1),0] for t in range(312)]
+        trend=[["%04d%02d"%(1980+t/12,t%12+1),0] for t in range(240)]
         for bi in bf.bis:
             bicount+=1
             heatMap=np.zeros((90,180),dtype=np.int)
@@ -306,10 +306,11 @@ def createDir():
 
 if __name__ == '__main__':
     createDir()
+
+    fileToAnalysis="data/diff_tos_ersst_MK3.txt"
+
     start=time.time() 
     r=loadData(fileToAnalysis)
-
-
 
     # for t in range(0,r.shape[2],12):
     #     r[:,:,int(t/12)]=np.mean(r[:,:,t:t+12],axis=2)
@@ -317,15 +318,15 @@ if __name__ == '__main__':
 
 
     PlotHeatMap.plotGlobal(np.mean(r,axis=2),"figure/mean.png",needBalance=True)
-
+    r=r[:,:,:240]
     r=removeNonsignificant(r)[:,:,:]
     bis=identifyBiasInstances(r[:,:,:])
     print("all bias instances identified")
     print("%d bias instances identified"%(len(bis)))
     bfs=obtainBiasFamilies(bis)
     print("bias families obtained")
-    depictRelations(bfs)
-    print("relation network contructed")
+    # depictRelations(bfs)
+    # print("relation network contructed")
     print("total time cost: %d seconds"%(time.time()-start))
 
     
