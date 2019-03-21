@@ -13,8 +13,6 @@ import os
 
 fileToAnalysis="data/diff_tos_ersst_ccsm4.txt"
 fileToAnalysis="data/diff_pr_gpcp_ccsm4.txt"
-fileToAnalysis="data/diff_tauu_tauuob_ccsm4.txt"
-fileToAnalysis="data/diff_psl_pslob_ccsm4.txt"
 
 deltaA=25
 deltaR=0.5
@@ -45,7 +43,7 @@ def removeNonsignificant(data):
     mean=np.mean(data)
     std=np.std(data)
     data=(data-mean)/std
-    data.mask[(data<=np.percentile(data,99))&(data>=np.percentile(data,1))]=True
+    data.mask[(data<=np.percentile(data,97.5))&(data>=np.percentile(data,2.5))]=True
     return data
 
 def removeNonsignificantOld(data,normalize=True):
@@ -307,10 +305,8 @@ def createDir():
 if __name__ == '__main__':
     createDir()
 
-    fileToAnalysis="data/diff_tos_ersst_MK3.txt"
-
     start=time.time() 
-    r=loadData(fileToAnalysis)
+    r=np.ma.array(np.load("data/diff_pr_MIROC5_GPCP.npy"),mask=np.load("data/diff_pr_MIROC5_GPCP_mask.npy"))
 
     # for t in range(0,r.shape[2],12):
     #     r[:,:,int(t/12)]=np.mean(r[:,:,t:t+12],axis=2)

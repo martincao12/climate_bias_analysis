@@ -49,7 +49,10 @@ def plotGlobal(data,figname,title="",needBalance=False,latStartAtZero=False,hist
 
 
     cs=m.contourf(x,y,data,20,cmap = cm.seismic)
-    cbar = m.colorbar(cs,location='bottom',pad="5%")
+    # cs=m.contourf(x,y,data,80,cmap = "gist_ncar")
+
+    if len(hist)==0:
+        cbar = m.colorbar(cs,location='bottom',pad="5%")
     titleW=""
     for i in range(0,len(title),140):
         titleW+=(title[i:i+140]+"\n")
@@ -74,7 +77,7 @@ def plotGlobal(data,figname,title="",needBalance=False,latStartAtZero=False,hist
         plt.ylabel("normalized bias")
 
         totalLables=[x[0] for x in trend]
-        xticks=list(range(0,len(trend),int(len(trend)/8)))
+        xticks=list(range(0,len(trend),int(len(trend)/20)))
         xlabels=[totalLables[x] for x in xticks]
         xticks.append(len(totalLables))
         xlabels.append(totalLables[-1])

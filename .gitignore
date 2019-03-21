@@ -1,5 +1,6 @@
 data/raw_data/
 data/other_data/
+data/old_data/
 __pycache__/
 results/
 figure/
