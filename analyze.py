@@ -22,6 +22,8 @@ variableToAnalysis=""
 deltaA=25
 deltaR=0.5
 deltaF=0.3
+gammaR=2
+gammaD=1
 bfMinLen=5
 
 def delFile(path):
@@ -51,13 +53,13 @@ def removeNonsignificantOld(data):
     data.mask[(data<=np.percentile(data,97.5))&(data>=np.percentile(data,2.5))]=True
     return data
 
-def removeNonsignificant(data,normalize=False):
+def removeNonsignificant(data,gammaR,normalize=False):
     dataPositive,dataNegative=dataPNSplit(data)
     meanPositive=np.mean(dataPositive)
     stdPositive=np.std(dataPositive)
     meanNegative=np.mean(dataNegative)
     stdNegative=np.std(dataNegative)
-    data.mask[(data<=meanPositive+2*stdPositive)&(data>=meanNegative-2*stdNegative)]=True
+    data.mask[(data<=meanPositive+gammaR*stdPositive)&(data>=meanNegative-gammaR*stdNegative)]=True
     # data.mask[(data<=np.percentile(dataPositive,95))&(data>=np.percentile(dataNegative,5))]=True
     if normalize:
         data[data>0]=data[data>0]/meanPositive
@@ -206,7 +208,7 @@ def identifyBiasInstances(data):
     plotBIDistribution(bis)
     return bis
 
-def obtainBiasFamilies(bis):
+def obtainBiasFamilies(bis,gammaD):
     G=nx.Graph()
     G.add_nodes_from(range(len(bis)))
 
@@ -214,7 +216,7 @@ def obtainBiasFamilies(bis):
     for i in range(len(bis)):
         for j in range(i+1,len(bis)):
             DTWDistList.append(normalizedDTWDistance(bis[i].center,bis[j].center))
-    deltaF=np.mean(DTWDistList)-1*np.std(DTWDistList)
+    deltaF=np.mean(DTWDistList)-gammaD*np.std(DTWDistList)
     print("deltaF is set as",deltaF,np.mean(DTWDistList),np.std(DTWDistList))
 
     for i in range(len(bis)):
@@ -584,11 +586,11 @@ if __name__ == '__main__':
 
     PlotHeatMap.plotGlobal(np.mean(r,axis=2),figurePath+"mean.png",needBalance=True)
     r=r[:,:,:240]
-    r=removeNonsignificant(r)[:,:,:]
+    r=removeNonsignificant(r,gammaR)[:,:,:]
     bis=identifyBiasInstances(r[:,:,:])
     print("all bias instances identified")
     print("%d bias instances identified"%(len(bis)))
-    bfs=obtainBiasFamilies(bis)
+    bfs=obtainBiasFamilies(bis,gammaD)
     print("bias families obtained")
     # depictRelations(bfs)
     # print("relation network contructed")
