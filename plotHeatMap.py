@@ -13,9 +13,9 @@ def plotGlobal(data,figname,title="",needBalance=False,latStartAtZero=False,hist
 
     if needBalance:
         if np.abs(np.max(data))>np.abs(np.min(data)):
-            data[0,0]=-np.abs(np.max(data))
+            data[45,0]=-np.abs(np.max(data))
         elif np.abs(np.max(data))<np.abs(np.min(data)):
-            data[0,0]=np.abs(np.min(data))
+            data[45,0]=np.abs(np.min(data))
         else:
             pass
 
@@ -33,10 +33,10 @@ def plotGlobal(data,figname,title="",needBalance=False,latStartAtZero=False,hist
 
     # draw parallels.
     parallels = np.arange(-90.,91.,30.)
-    m.drawparallels(parallels,labels=[1,0,0,0],fontsize=10)
+    m.drawparallels(parallels,labels=[1,0,0,0],fontsize=20)
     # draw meridians
-    meridians = np.arange(0.,361.,30.)
-    m.drawmeridians(meridians,labels=[0,0,0,1],fontsize=10)
+    meridians = np.arange(0.,361.,60.)
+    m.drawmeridians(meridians,labels=[0,0,0,1],fontsize=20)
 
     # nx=data.shape[1]
     # ny=data.shape[0]
@@ -52,12 +52,13 @@ def plotGlobal(data,figname,title="",needBalance=False,latStartAtZero=False,hist
     # cs=m.contourf(x,y,data,80,cmap = "gist_ncar")
 
     if len(hist)==0:
-        cbar = m.colorbar(cs,location='bottom',pad="5%")
-    titleW=""
+        cbar = m.colorbar(cs,location='right',pad="5%")
+        cbar.ax.tick_params(labelsize=20)
+    titleW="Location"
     for i in range(0,len(title),140):
         titleW+=(title[i:i+140]+"\n")
 
-    plt.title(titleW,fontsize="medium")
+    plt.title(titleW,fontsize=25)
 
 
     if len(hist)!=0:
@@ -66,15 +67,17 @@ def plotGlobal(data,figname,title="",needBalance=False,latStartAtZero=False,hist
         index=np.arange(N)
         ax2.bar(index-0.2,[x[1] for x in hist],facecolor="red",width=0.3,label="positive bias")
         ax2.bar(index+0.2,[x[2] for x in hist],facecolor="blue",width=0.3,label="negative bias")
-        plt.xlabel("Months")
-        plt.ylabel("occurence")
-        plt.xticks(index,[x[0] for x in hist])
+        plt.xlabel("Months",fontsize=20)
+        plt.ylabel("Occurence",fontsize=20)
+        plt.xticks(index,[x[0] for x in hist],fontsize=15)
+        plt.yticks(fontsize=15)
         plt.legend(loc="upper left")
+        plt.title("Seasonal statistics",fontsize=25)
 
         ax3=plt.subplot(gs[1,1])
         ax3.plot([x[0] for x in trend],[x[1] for x in trend])
-        plt.xlabel("time")
-        plt.ylabel("normalized bias")
+        plt.xlabel("Time",fontsize=20)
+        plt.ylabel("Bias($\\times 10^{-5} {\\rm mm/s}$)",fontsize=20)
 
         totalLables=[x[0] for x in trend]
         xticks=list(range(0,len(trend),int(len(trend)/20)))
@@ -82,8 +85,9 @@ def plotGlobal(data,figname,title="",needBalance=False,latStartAtZero=False,hist
         xticks.append(len(totalLables))
         xlabels.append(totalLables[-1])
         ax3.set_xticks(xticks)
-        ax3.set_xticklabels(xlabels, rotation=40)
-
+        ax3.set_xticklabels(xlabels, rotation=40,fontsize=15)
+        plt.yticks(fontsize=15)
+        plt.title("Time periods",fontsize=25)
 
     plt.savefig(figname)
     plt.close()

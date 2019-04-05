@@ -17,7 +17,7 @@ def removeNonsignificant(data):
     return data
 
 def plotSlice():
-    r=np.ma.array(np.load("data/diff_pr_CM3_GPCP.npy"),mask=np.load("data/diff_pr_CM3_GPCP_mask.npy"))
+    r=np.ma.array(np.load("data/diff_pr_MIROC5_GPCP.npy"),mask=np.load("data/diff_pr_MIROC5_GPCP_mask.npy"))
     r=r[:,:,:240]
     r=removeNonsignificant(r)[:,:,:]
 
@@ -33,7 +33,7 @@ def plotSlice():
                     slice_data.append([x,y,z])
         data.append(slice_data)
     for slice_data in data[::60]:
-        ax.scatter([x[0] for x in slice_data], [x[1] for x in slice_data], [x[2] for x in slice_data], c=randomcolor())
+        ax.scatter([x[0] for x in slice_data], [x[1] for x in slice_data], [x[2] for x in slice_data], c=randomcolor(),s=5)
 
 
 
@@ -237,5 +237,5 @@ def plotBI():
 
 def plotBF():
     pass
-
-plotBI()
+    
+plotSlice()
