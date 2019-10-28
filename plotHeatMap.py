@@ -6,7 +6,6 @@ from matplotlib import axes
 from mpl_toolkits.basemap import Basemap
 
 def plotGlobal(data,figname,title="",needBalance=False,latStartAtZero=False,hist=[],trend=[]):
-    # data[0:5,0:5]=1
 
     if not latStartAtZero:
         data=np.tile(data,[1,2])[:,int(data.shape[1]/2):int(data.shape[1]/2)+data.shape[1]]
@@ -38,18 +37,10 @@ def plotGlobal(data,figname,title="",needBalance=False,latStartAtZero=False,hist
     meridians = np.arange(0.,361.,60.)
     m.drawmeridians(meridians,labels=[0,0,0,1],fontsize=20)
 
-    # nx=data.shape[1]
-    # ny=data.shape[0]
-    # lons,lats=m.makegrid(nx,ny)
-    # x,y=m(lons,lats)
-
-
     x=np.tile(np.arange(1,360,2),90).reshape(90,180)
     y=np.tile(np.arange(-89,90,2).reshape(90,1),180)
 
-
     cs=m.contourf(x,y,data,20,cmap = cm.seismic)
-    # cs=m.contourf(x,y,data,80,cmap = "gist_ncar")
 
     if len(hist)==0:
         cbar = m.colorbar(cs,location='right',pad="5%")

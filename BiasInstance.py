@@ -5,9 +5,3 @@ class BiasInstance:
         self.tEnd=tEnd
         self.G=G
         self.center=None
-
-    def updateBound():
-        pass
-
-    def pureRegion():
-        pass
