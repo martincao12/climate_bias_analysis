@@ -15,17 +15,17 @@ from mpl_toolkits.basemap import Basemap
 from matplotlib import cm
 from matplotlib import axes
 
-
-figurePath=""
-variableToAnalysis=""
-
+# parameter setting
 deltaA=25
 deltaR=0.5
-deltaF=0.3
-gammaR=2
+gammaR=0.05
 gammaD=1
-bfMinLen=5
 
+# running config
+figurePath="" # basic directory to output figures
+variableToAnalysis="" # variable to analyze, corresponding to filenames in "data" directory
+
+# remove files and directories in "path" directory
 def delFile(path):
     ls = os.listdir(path)
     for i in ls:
@@ -35,6 +35,18 @@ def delFile(path):
         else:
             os.remove(cPath)
 
+# creating directories for outputing figures
+def createDir():
+    if not os.path.exists(figurePath):
+        os.makedirs(figurePath)
+    if not os.path.exists(figurePath+"bis"):
+        os.makedirs(figurePath+"bis")
+    if not os.path.exists(figurePath+"bfs"):
+        os.makedirs(figurePath+"bfs")
+    if not os.path.exists(figurePath+"relations"):
+        os.makedirs(figurePath+"relations")
+
+# split a np.ma.array to a np.ma.array with positive values and a np.ma.array with negative values
 def dataPNSplit(data):
     dataMask=data.mask
     dataValue=data.data
@@ -46,19 +58,18 @@ def dataPNSplit(data):
     dataNegative=np.ma.array(dataValue,mask=dataMaskNegative)
     return (dataPositive,dataNegative)
 
+# remove nonsignificant residuals,gammaR is the significance level
 def removeNonsignificant(data,gammaR,normalize=False):
     dataPositive,dataNegative=dataPNSplit(data)
     meanPositive=np.mean(dataPositive)
     stdPositive=np.std(dataPositive)
     meanNegative=np.mean(dataNegative)
     stdNegative=np.std(dataNegative)
-    data.mask[(data<=meanPositive+gammaR*stdPositive)&(data>=meanNegative-gammaR*stdNegative)]=True
-    # data.mask[(data<=np.percentile(dataPositive,95))&(data>=np.percentile(dataNegative,5))]=True
+    data.mask[(data<=np.percentile(dataPositive,100-gammaR*100/2.0))&(data>=np.percentile(dataNegative,gammaR*100/2.0))]=True
     if normalize:
         data[data>0]=data[data>0]/meanPositive
         data[data<0]=data[data<0]/np.abs(meanNegative)
     return data
-
 
 def grid2String(idxLat,idxLon):
     return "%d:%d"%(idxLat,idxLon)
@@ -66,6 +77,7 @@ def grid2String(idxLat,idxLon):
 def string2Grid(gridS):
     return [int(x) for x in gridS.split(":")]
 
+# initialize a graph for a 2-D residual array 
 def constructGraph(data,cyclic=True):
     dimLat,dimLon=data.shape
     G=nx.Graph()
@@ -84,33 +96,19 @@ def constructGraph(data,cyclic=True):
                     G.add_edge(grid2String(i,j),grid2String(i,0))
     return G
 
+# find connected components of a graph
 def findConnectedComponents(G):
     components=sorted(nx.connected_component_subgraphs(G),key=len,reverse=True)
     return components
 
-def loadData(filename):
-    input=open(filename,"r")
-    dimLat,dimLon,dimT=[int(x) for x in input.readline().split(",")]
-    r=np.zeros((dimLat,dimLon,dimT),dtype=np.float)
-    rMask=np.ones((dimLat,dimLon,dimT),dtype=np.int)
-    while True:
-        line=input.readline()
-        if not line:
-            break
-        lineArr=line.split(",")
-        idxLat,idxLon,data=[int(lineArr[0])-1,int(lineArr[1])-1,[float(x) for x in lineArr[2:]]]
-        r[idxLat,idxLon,:]=data
-        rMask[idxLat,idxLon,:]=0
-    r=-r #convert observation-simulation to simulation-observation
-    #time start from 1980, latitude is -89 to 89 degrees north, longitude is -179 to 179 degress east
-    return np.ma.array(r,mask=rMask)
-
+# merge two graphs and return the max connected component
 def mergeGraph(G1,G2):
     G=nx.Graph()
     G.add_edges_from(set([tuple(sorted(edge)) for edge in G1.edges])&set([tuple(sorted(edge)) for edge in G2.edges]))
     connected_components=nx.connected_component_subgraphs(G)
     return max(connected_components,key=len,default=nx.Graph())
 
+# used to compute the center of a bias instance
 def computeBICenter(bi,data):
     bList=[]
     for gridS in bi.region:
@@ -118,22 +116,11 @@ def computeBICenter(bi,data):
         bList.append(data[idxLat,idxLon,bi.tStart:bi.tEnd+1])
     return np.mean(bList,axis=0)
 
+# used to compute the normalized DTW distance of two series
 def normalizedDTWDistance(ts1,ts2):
     return mlpy.dtw_std(ts1,ts2)/(len(ts1)+len(ts2))
 
-def plotBiasFamily(bf,figName,dimLat=90,dimLon=180):
-    bfHeatMap=np.zeros((dimLat,dimLon),dtype=np.int)
-    bfTitle="Periods: "
-    bfis=[]
-    for bi in bf.bis:
-        bfis.append(bi)
-        for gridS in bi.region:
-            idxLat,idxLon=string2Grid(gridS)
-            bfHeatMap[idxLat,idxLon]=1
-        bfTitle+="%04d%02d-%04d%02d  "%(1980+bi.tStart/12,bi.tStart%12+1,1980+bi.tEnd/12,bi.tEnd%12+1)
-    PlotHeatMap.plotGlobal(bfHeatMap,figName,needBalance=True,title=bfTitle)
-        
-
+# identify bias instances from 3-D residual matrix
 def identifyBiasInstances(data):
     s={}
     _,_,dimT=data.shape
@@ -186,6 +173,7 @@ def identifyBiasInstances(data):
     plotBIDistribution(bis)
     return bis
 
+# obtain bias families from bias instances, and output bias instance figures and bias family figures
 def obtainBiasFamilies(bis,gammaD):
     G=nx.Graph()
     G.add_nodes_from(range(len(bis)))
@@ -223,7 +211,6 @@ def obtainBiasFamilies(bis,gammaD):
     delFile(figurePath+"bis")
     delFile(figurePath+"bfs")
 
-
     count=0
     for bf in bfs:
         count+=1
@@ -254,16 +241,7 @@ def obtainBiasFamilies(bis,gammaD):
 
     return bfs
 
-def createDir():
-    if not os.path.exists(figurePath):
-        os.makedirs(figurePath)
-    if not os.path.exists(figurePath+"bis"):
-        os.makedirs(figurePath+"bis")
-    if not os.path.exists(figurePath+"bfs"):
-        os.makedirs(figurePath+"bfs")
-    if not os.path.exists(figurePath+"relations"):
-        os.makedirs(figurePath+"relations")
-
+# plot the lasting time distribution of bias instances
 def plotBIDistribution(bis):
     lengths=[]
     for bi in bis:
@@ -284,6 +262,7 @@ def plotBIDistribution(bis):
     plt.savefig(figurePath+"bi_time_distribution.png")
     plt.close()
 
+# plot the lasting time distribution of bias families and number of contained bias instances distribution of bias families
 def plotBFDistribution(bfs):
     lengths=[]
     for bf in bfs:
@@ -315,6 +294,7 @@ def plotBFDistribution(bfs):
     plt.savefig(figurePath+"bf_bi_distribution.png")
     plt.close()
 
+# plot selected bias families, sel gives the corresponding selected indices
 def plotBFSel(bfs,sel):
     num=len(sel)
     fig=plt.figure(figsize=(18, num*2)) 
@@ -392,7 +372,7 @@ def plotBFSel(bfs,sel):
     plt.savefig(figurePath+"sel_bf.png")
     plt.close()
 
-
+# plot bias families in bfs
 def plotTop(bfs):
     num=len(bfs)
     fig=plt.figure(figsize=(12, int((num+1)/2)*2)) 
@@ -458,17 +438,17 @@ def plotTop(bfs):
         N=len(hist)
         index=np.arange(N)
         ax.bar(index-0.18,[x[1] for x in hist],facecolor="red",width=0.3,label="positive bias")
-        ax.bar(index+0.18,[x[2] for x in hist],facecolor="blue",width=0.3,label="negative bias"
+        ax.bar(index+0.18,[x[2] for x in hist],facecolor="blue",width=0.3,label="negative bias")
         plt.xticks(index,[x[0] for x in hist],fontsize=12)
         plt.yticks(fontsize=12)
         plt.legend(loc="upper left")
-        plt.text(9.8,0,"No.%d"%(i+1),fontdict={"color":"black","weight":"bold","size":"15"}
+        plt.text(9.8,0,"No.%d"%(i+1),fontdict={"color":"black","weight":"bold","size":"15"})
     plt.savefig(figurePath+"top_bf_distribution")
     plt.close()
 
-
+# main function
 if __name__ == '__main__':
-    variableToAnalysis="diff_pr_CM5_GPCP"
+    variableToAnalysis="diff_pr_MIROC5_GPCP"
     figurePath="figure/%s/"%(variableToAnalysis)
     createDir()
 
